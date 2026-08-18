@@ -1,0 +1,10 @@
+{"timestamp": "2026-08-18T09:14:02Z", "session_id": "focus-group-01", "label": "neutral", "confidence": 0.62, "source_model": "model3_facial_emotion_cnn"}
+{"timestamp": "2026-08-18T09:14:05Z", "session_id": "focus-group-01", "label": "happy", "confidence": 0.88, "source_model": "model3_facial_emotion_cnn"}
+{"timestamp": "2026-08-18T09:14:09Z", "session_id": "focus-group-01", "label": "surprise", "confidence": 0.93, "source_model": "model3_facial_emotion_cnn"}
+{"timestamp": "2026-08-18T09:14:14Z", "session_id": "focus-group-01", "label": "happy", "confidence": 0.79, "source_model": "model3_facial_emotion_cnn"}
+{"timestamp": "2026-08-18T09:30:41Z", "session_id": "focus-group-01", "label": "sad", "confidence": 0.55, "source_model": "model3_facial_emotion_cnn"}
+{"timestamp": "2026-08-18T09:30:47Z", "session_id": "focus-group-01", "label": "neutral", "confidence": 0.61, "source_model": "model3_facial_emotion_cnn"}
+{"timestamp": "2026-08-18T22:05:12Z", "session_id": "usability-test-02", "label": "sad", "confidence": 0.58, "source_model": "model3_facial_emotion_cnn"}
+{"timestamp": "2026-08-18T22:05:20Z", "session_id": "usability-test-02", "label": "neutral", "confidence": 0.66, "source_model": "model3_facial_emotion_cnn"}
+{"timestamp": "2026-08-18T22:06:01Z", "session_id": "usability-test-02", "label": "surprise", "confidence": 0.85, "source_model": "model3_facial_emotion_cnn"}
+{"timestamp": "2026-08-18T22:06:15Z", "session_id": "usability-test-02", "label": "happy", "confidence": 0.71, "source_model": "model3_facial_emotion_cnn"}
