@@ -41,15 +41,21 @@ they'd learned. That comparison — and the honesty to report ResNet/EfficientNe
 essentially failing rather than cherry-picking the winner — is carried into
 `data/class_notes.md` so the GenAI layer can cite it accurately if asked.
 
-**What's not included:** the actual trained weights. They were saved to
-`model3.weights.h5` inside the original Colab session, which this environment doesn't
-have access to. `app/emotion_model.py` builds the identical architecture and will load
-weights from `models/model3.weights.h5` if present — see
-`scripts/export_weights_from_colab.md` for how to get the real file in. Until then,
-`/predict` runs on random-initialized weights: the API contract and image
-preprocessing are verified end-to-end (see measurements below), but the *predictions*
-are not meaningful — `weights_loaded: false` in every response says so explicitly
-rather than hiding it.
+**The trained weights are real and included.** `models/model3.weights.h5` is the
+actual weights from a full 35-epoch retrain of Model 3 in the original Colab notebook
+(the first session's checkpoint had been lost to a Colab runtime reset before it could
+be exported — see `scripts/export_weights_from_colab.md` for the full story, including
+a checkpoint-filename mixup along the way that made this take a bit of detective work).
+Before trusting it, the file's embedded architecture was checked layer-by-layer against
+`build_model3()` (identical, including the exact 1,782,340 param count pinned in
+`tests/test_emotion_model.py`), and predictions from the original file were confirmed
+bit-for-bit identical to predictions after converting it into this app's expected
+weights format — also pinned as a regression test. `/predict` now runs on these real
+weights: `weights_loaded: true` in every response, same as `/health`'s
+`cnn_weights_loaded`. (The one thing not re-verified here: the 77% test accuracy figure
+below is from the original notebook's held-out evaluation, not re-run in this sandbox,
+since the labeled face dataset lives only in that Google Drive — this app ships the
+trained model, not the dataset.)
 
 ## Architecture
 
@@ -79,10 +85,12 @@ tool built on top of an emotion classifier should not blur that.
 - `/ask` and `/report/daily`, offline fallback mode, 10 sample events: retrieval +
   generation **~4 ms** end-to-end (same order of magnitude as the audio project —
   retrieval cost doesn't depend on the domain).
-- `/predict`, CNN forward pass on a 48x48 grayscale image, CPU, untrained weights:
-  **~450 ms** round trip including image decode and HTTP overhead. This is the
-  number to re-measure once real weights are loaded, since it's dominated by
-  TensorFlow's per-call graph overhead on CPU, not the network layer.
+- `/predict`, CNN forward pass on a 48x48 grayscale image, CPU, **real trained
+  weights**, steady-state (average of 20 calls after a warm-up call): **~68 ms** for
+  the forward pass alone, **~97 ms** full HTTP round trip including image decode.
+  This replaces the earlier ~450 ms figure, which was measured on
+  random-initialized weights without a warm-up call, so the two aren't a clean
+  apples-to-apples comparison — the number that matters going forward is this one.
 
 ## Running it
 
@@ -98,8 +106,9 @@ curl -X POST localhost:8000/predict -F "file=@some_face.jpg"
 ```
 
 To use a real LLM instead of the offline fallback, copy `.env.example` to `.env` and
-fill in Azure OpenAI (or OpenAI) credentials. To use the real trained CNN instead of
-random weights, follow `scripts/export_weights_from_colab.md`.
+fill in Azure OpenAI (or OpenAI) credentials. The real trained CNN weights already
+ship in `models/model3.weights.h5` — no extra setup needed; see
+`scripts/export_weights_from_colab.md` only if they ever need to be regenerated.
 
 ### Docker
 
@@ -114,18 +123,24 @@ daemon — build locally to confirm before demoing, same caveat as the audio pro
 ### Tests
 
 ```bash
-pytest tests/ -v   # 8 passed
+pytest tests/ -v   # 11 passed
 ```
 
 `tests/test_emotion_model.py` pins the architecture (exact param count from the
-notebook's `model3.summary()`) and confirms the preprocessing pipeline produces a
-valid softmax distribution for square and non-square input images. `tests/test_api.py`
-covers the full API surface including a real image POSTed through `/predict`.
+notebook's `model3.summary()`), confirms the preprocessing pipeline produces a valid
+softmax distribution for square and non-square input images, and — now that real
+weights are shipped — checks they actually load (`weights_loaded is True`), that
+predictions are deterministic and meaningfully more confident than chance, and that
+converting the original full-model file into this app's weights format didn't change
+a single prediction (bit-for-bit regression check). `tests/test_api.py` covers the
+full API surface including a real image POSTed through `/predict`.
 
 ## What I'd do next with more time
 
-- Get the real `model3.weights.h5` in and re-measure `/predict` latency and actual
-  accuracy against a few held-out faces.
+- Get a labeled held-out face set into this repo (or a public equivalent) so accuracy
+  can be re-verified here directly, instead of citing the original notebook's
+  evaluation — the weights are real and verified to load correctly, but this sandbox
+  never had a labeled test image to score them against.
 - Quantize Model 3 to TFLite and benchmark it the same way ModelBench benchmarks the
   audio classifiers (p50/p95 latency, size, int8 vs float16) — same methodology,
   new modality, natural next step given the on-device quantization background.

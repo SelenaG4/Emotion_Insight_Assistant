@@ -27,12 +27,19 @@ finding in the notebook, not a bug: ImageNet backbones expect ~224x224 inputs, a
 resizing them down to this dataset's native 48x48 resolution destroyed most of the
 pretrained features they rely on.
 
-IMPORTANT: this module defines and can run the architecture, but the *trained weights*
-(model3.weights.h5) live wherever the original Colab session saved them -- they were
-not available in this session. Without them, `EmotionClassifier.predict()` runs on
-whatever weights are loaded (random-initialized, if none are provided), and its output
-is not a meaningful prediction. See scripts/export_weights_from_colab.md for how to
-get the real trained weights into `models/model3.weights.h5`.
+The trained weights (`models/model3.weights.h5`) are real: extracted from the actual
+Colab session that produced the table above, verified to reproduce bit-identical
+output to the originally saved model once loaded into this exact architecture (see
+tests/test_emotion_model.py), not retrained or approximated. See
+scripts/export_weights_from_colab.md for how they were obtained, including a filename
+mixup along the way (the checkpoint callback had been left pointed at a stale
+"Efficientnetmodel.h5" name from an earlier model in the same notebook -- the weights
+themselves are genuinely Model 3's).
+
+If `models/model3.weights.h5` is ever missing (e.g. a fresh checkout without it),
+`EmotionClassifier.predict()` still runs end-to-end on whatever weights are loaded --
+random-initialized if none are provided -- but that output is not a meaningful
+prediction; `weights_loaded: false` in the API response says so explicitly.
 """
 from __future__ import annotations
 

@@ -28,7 +28,7 @@ def test_health() -> None:
     body = resp.json()
     assert body["status"] == "ok"
     assert body["llm_mode"] in {"azure_openai", "openai", "offline_fallback"}
-    assert body["cnn_weights_loaded"] is False  # no trained weights shipped in this repo
+    assert body["cnn_weights_loaded"] is True  # real trained model3.weights.h5 present, see models/
 
 
 def test_predict_endpoint_runs_end_to_end() -> None:
@@ -42,7 +42,7 @@ def test_predict_endpoint_runs_end_to_end() -> None:
     assert resp.status_code == 200
     body = resp.json()
     assert body["label"] in {"happy", "sad", "neutral", "surprise"}
-    assert body["weights_loaded"] is False
+    assert body["weights_loaded"] is True
 
 
 def test_ingest_then_ask() -> None:
