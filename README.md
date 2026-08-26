@@ -135,6 +135,31 @@ converting the original full-model file into this app's weights format didn't ch
 a single prediction (bit-for-bit regression check). `tests/test_api.py` covers the
 full API surface including a real image POSTed through `/predict`.
 
+### CI
+
+GitHub Actions runs the test suite on every push to `main` (see
+`.github/workflows/ci.yml`). No Azure/OpenAI keys are configured in CI on
+purpose, so this also proves the app degrades gracefully to the offline
+fallback without them.
+
+## A CI bug I hit (and how it was diagnosed)
+
+The first push to GitHub Actions failed with `ModuleNotFoundError: No module
+named 'app'` while collecting both test files, even though `pytest tests/ -v`
+had passed locally every time throughout development. Reproducing the exact
+CI recipe (a clean virtualenv, `pip install -r requirements.txt`, then the
+bare `pytest tests/ -v` command CI actually runs — not `python -m pytest`,
+which I'd been using without thinking about the difference) reproduced the
+failure immediately.
+
+The cause is a pytest import-mode detail: by default, pytest walks up from
+each test file looking for `__init__.py` files, adding the first directory
+*without* one to `sys.path`. This repo's `tests/` has no `__init__.py`, so
+that directory is `tests/` itself — `app/`, one level up, never lands on
+`sys.path`. Fixed with a `pytest.ini` that pins `pythonpath = .`, putting the
+repo root on `sys.path` regardless of how pytest is invoked — verified with a
+fresh virtualenv and the exact bare-`pytest` command CI runs (11 passed).
+
 ## What I'd do next with more time
 
 - Get a labeled held-out face set into this repo (or a public equivalent) so accuracy
