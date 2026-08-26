@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run test suite
+        # Exercises the real trained CNN weights (models/model3.weights.h5,
+        # committed to this repo) end to end -- loading, deterministic
+        # prediction, and a bit-for-bit check against the originally saved
+        # model -- plus the GenAI/RAG layer's offline fallback path (no
+        # Azure/OpenAI keys are configured in CI on purpose, so this also
+        # proves the app degrades gracefully without them).
+        run: pytest tests/ -v
